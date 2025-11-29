@@ -1,0 +1,166 @@
+import { useState, useEffect } from "react";
+
+// --- Sample questions (replace with your own images & questions) ---
+const QUESTION_BANK = [
+  {
+    id: 1,
+    question: "Câu hỏi 1: Đây là lỗi gì?",
+    img: "https://placehold.co/600x400?text=Image+1",
+  },
+  {
+    id: 2,
+    question: "Câu hỏi 2: Tình huống này xử lý thế nào?",
+    img: "https://placehold.co/600x400?text=Image+2",
+  },
+  {
+    id: 3,
+    question: "Câu hỏi 3: Có được chấp nhận không?",
+    img: "https://placehold.co/600x400?text=Image+3",
+  },
+  // ... Add up to 10 or more
+];
+
+// Fixed 12 answers
+const FIXED_ANSWERS = [
+  "A1", "A2", "A3", "A4", "A5", "A6",
+  "A7", "A8", "A9", "A10", "A11", "A12",
+];
+
+export default function SDCLearnApp() {
+  const [page, setPage] = useState("home");
+  const [employeeId, setEmployeeId] = useState("");
+  const [questions, setQuestions] = useState([]);
+  const [answers, setAnswers] = useState({});
+  const [startTime, setStartTime] = useState(null);
+
+  const startTest = () => {
+    const shuffled = [...QUESTION_BANK].sort(() => 0.5 - Math.random());
+    const picked = shuffled.slice(0, 10);
+    setQuestions(picked);
+    setAnswers({});
+    setStartTime(Date.now());
+    setPage("test");
+  };
+
+  const submitAnswer = (qid, ans) => {
+    setAnswers((p) => ({ ...p, [qid]: ans }));
+  };
+
+  const finish = () => {
+    setPage("result");
+  };
+
+  const correctCount = Object.keys(answers).filter((k) => answers[k] === "A1").length; // demo rule
+  const finishTime = startTime ? ((Date.now() - startTime) / 1000).toFixed(1) : 0;
+
+  return (
+    <div className="w-full min-h-screen bg-sky-500 flex items-center justify-center p-4">
+      {page === "home" && (
+        <div className="text-center text-white">
+          <h1 className="text-6xl font-bold mb-10">SDC Learn</h1>
+
+          <div className="flex gap-2 justify-center">
+            <input
+              className="p-3 rounded-xl text-black"
+              placeholder="Nhập mã nhân viên"
+              value={employeeId}
+              onChange={(e) => setEmployeeId(e.target.value)}
+            />
+            <button
+              onClick={() => employeeId && startTest()}
+              className="px-6 py-3 bg-green-600 rounded-2xl text-xl hover:bg-green-700"
+            >
+              Start
+            </button>
+          </div>
+        </div>
+      )}
+
+      {page === "test" && (
+        <div className="w-full max-w-3xl bg-white rounded-2xl p-4 shadow-xl">
+          {questions.map((q) => (
+            <QuestionBox
+              key={q.id}
+              data={q}
+              selected={answers[q.id]}
+              onSelect={submitAnswer}
+            />
+          ))}
+
+          <button
+            onClick={finish}
+            className="mt-6 px-6 py-3 bg-blue-600 text-white rounded-2xl hover:bg-blue-700"
+          >
+            OK (Hoàn thành 10 câu)
+          </button>
+        </div>
+      )}
+
+      {page === "result" && (
+        <div className="text-center text-white">
+          <h1 className="text-4xl font-bold mb-4">Kết quả</h1>
+          <p className="text-2xl mb-2">Mã nhân viên: {employeeId}</p>
+          <p className="text-2xl mb-2">Điểm: {correctCount} / 10</p>
+          <p className="text-2xl mb-6">Thời gian: {finishTime} giây</p>
+
+          <button
+            onClick={() => setPage("home")}
+            className="px-6 py-3 bg-white text-black rounded-xl hover:bg-gray-200"
+          >
+            Continue
+          </button>
+        </div>
+      )}
+    </div>
+  );
+}
+
+function QuestionBox({ data, selected, onSelect }) {
+  const [open, setOpen] = useState(false);
+
+  return (
+    <div className="border-2 border-gray-300 rounded-xl p-4 mb-6">
+      <div className="flex justify-between items-start">
+        <h2 className="text-xl font-bold">{data.question}</h2>
+        <button
+          onClick={() => setOpen(true)}
+          className="px-4 py-1 bg-red-600 text-white rounded-lg hover:bg-red-700"
+        >
+          NG
+        </button>
+      </div>
+
+      <img src={data.img} alt="question" className="w-full mt-4 rounded-xl" />
+
+      {selected && (
+        <p className="mt-3 text-green-600 font-bold">Đã xác nhận: {selected}</p>
+      )}
+
+      {open && (
+        <div className="fixed inset-0 bg-black/50 flex items-center justify-center p-4">
+          <div className="bg-white p-6 rounded-2xl max-w-md w-full relative">
+            <h3 className="text-xl font-bold mb-3">Chọn đáp án</h3>
+            <div className="grid grid-cols-3 gap-3">
+              {FIXED_ANSWERS.map((a) => (
+                <button
+                  key={a}
+                  onClick={() => onSelect(data.id, a)}
+                  className="p-3 border rounded-xl hover:bg-gray-200"
+                >
+                  {a}
+                </button>
+              ))}
+            </div>
+
+            <button
+              onClick={() => setOpen(false)}
+              className="mt-4 px-6 py-2 bg-blue-600 text-white rounded-xl float-right"
+            >
+              Xác nhận
+            </button>
+          </div>
+        </div>
+      )}
+    </div>
+  );
+}
